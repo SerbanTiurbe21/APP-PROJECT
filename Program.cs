@@ -1,3 +1,4 @@
+using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
@@ -44,6 +45,24 @@ namespace WebApplication1
                 options.AddPolicy("AllowSpecificOrigin",
                     builder => builder.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod());
             });
+
+            // Adds memory cache services required for storing rate limit counters
+            builder.Services.AddMemoryCache();
+            // Configures IP rate limiting options from the "IpRateLimiting" section in appsettings.json
+            builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+
+            // Registers the IPolicyStore with a MemoryCache implementation to store rate limit policies
+            builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+
+            // Registers the IRateLimitCounterStore with a MemoryCache implementation to store rate counters
+            builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+
+            // Registers the rate limiting configuration which defines methods for handling rate limiting with DI
+            builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
+            // Registers the IProcessingStrategy as AsyncKeyLockProcessingStrategy to handle concurrent requests safely
+            builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
+
             builder.Services.AddHealthChecks();
 
             var app = builder.Build();
@@ -61,6 +80,8 @@ namespace WebApplication1
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
+
+            app.UseIpRateLimiting();
 
             app.MapHealthChecks("/health", new HealthCheckOptions
             {
