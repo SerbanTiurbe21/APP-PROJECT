@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json;
 using WebApplication1.Data;
 using WebApplication1.Exceptions;
 using WebApplication1.Middleware;
@@ -42,6 +44,7 @@ namespace WebApplication1
                 options.AddPolicy("AllowSpecificOrigin",
                     builder => builder.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod());
             });
+            builder.Services.AddHealthChecks();
 
             var app = builder.Build();
 
@@ -59,6 +62,25 @@ namespace WebApplication1
 
             app.UseAuthorization();
 
+            app.MapHealthChecks("/health", new HealthCheckOptions
+            {
+                ResponseWriter = async (context, report) =>
+                {
+                    context.Response.ContentType = "application/json";
+                    var response = new
+                    {
+                        status = report.Status.ToString(),
+                        checks = report.Entries.Select(entry => new
+                        {
+                            name = entry.Key,
+                            status = entry.Value.Status.ToString(),
+                            exception = entry.Value.Exception?.Message,
+                            duration = entry.Value.Duration.ToString()
+                        })
+                    };
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+                }
+            });
 
             app.MapControllers();
 
