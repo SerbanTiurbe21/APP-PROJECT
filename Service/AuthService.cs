@@ -1,9 +1,9 @@
-﻿using Azure.Core;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using WebApplication1.Data;
 using WebApplication1.DTO;
@@ -21,11 +21,12 @@ namespace WebApplication1.Service
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Role, user.Role)
             };
             // Retrieves the Token value from the configuration and creates a symmetric security key using that value.
             // The key is used to sign the JWT token.
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetValue<string>("AppSettings:Token")));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetValue<string>("AppSettings:Token")!));
 
             // Creates signing credentials using the security key and the HMAC SHA-512 algorithm. These credentials are used to sign the JWT token.
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
@@ -42,7 +43,7 @@ namespace WebApplication1.Service
             return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
         }
 
-        public async Task<string?> LoginAsync(UserDTO request)
+        public async Task<TokenResponseDto?> LoginAsync(UserDto request)
         {
             var user = await appDbContext.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
             if (user is null)
@@ -54,11 +55,19 @@ namespace WebApplication1.Service
             {
                 return null;
             }
-            string token = CreateToken(user);
-            return token;
+            return await GenerateTokenResponseAsync(user);
         }
 
-        public async Task<User?> RegisterAsync(UserDTO request)
+        private async Task<TokenResponseDto> GenerateTokenResponseAsync(User? user)
+        {
+            return new TokenResponseDto
+            {
+                AccessToken = CreateToken(user!),
+                RefreshToken = await GenerateAndSaveRefreshTokenAsync(user!)
+            };
+        }
+
+        public async Task<User?> RegisterAsync(UserDto request)
         {
             // first we check if the user already exists
             if (await appDbContext.Users.AnyAsync(u => u.Username == request.Username))
@@ -75,6 +84,44 @@ namespace WebApplication1.Service
             // we save the changes to the database
             await appDbContext.SaveChangesAsync();
             // we return the user
+            return user;
+        }
+
+        public async Task<TokenResponseDto?> RefreshTokensAsync(RefreshTokenRequestDto request)
+        {
+            var user = await ValidateRefreshTokenAsync(request.UserId, request.RefreshToken);
+            if (user is null)
+            {
+                return null;
+            }
+            return await GenerateTokenResponseAsync(user);
+        }
+
+        private static string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
+
+        private async Task<string> GenerateAndSaveRefreshTokenAsync(User user)
+        {
+            var refreshToken = GenerateRefreshToken();
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+
+            await appDbContext.SaveChangesAsync();
+            return refreshToken;
+        }
+
+        private async Task<User?> ValidateRefreshTokenAsync(Guid userId, string refreshToken)
+        { 
+            var user = await appDbContext.Users.FindAsync(userId);
+            if (user is null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+            {
+                return null;
+            }
             return user;
         }
     }

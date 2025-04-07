@@ -6,5 +6,8 @@
         // here we make the username by setting the username to be Empty if it is null
         public String Username { get; set; } = String.Empty;
         public String PasswordHash { get; set; } = String.Empty;
+        public String Role { get; set; } = String.Empty;
+        public String? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
     }
 }

@@ -13,7 +13,7 @@ namespace WebApplication1.Controllers
         private readonly IAuthService authService = authService;
 
         [HttpPost("register")]
-        public async Task<ActionResult<User>> Register(UserDTO request)
+        public async Task<ActionResult<User>> Register(UserDto request)
         {
             var user = await authService.RegisterAsync(request);
             if (user is null)
@@ -24,7 +24,7 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<string>> Login(UserDTO request)
+        public async Task<ActionResult<TokenResponseDto>> Login(UserDto request)
         { 
             var token = await authService.LoginAsync(request);
             if (token is null)
@@ -32,6 +32,17 @@ namespace WebApplication1.Controllers
                 return BadRequest("Wrong password");
             }
             return Ok(token);
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<ActionResult<TokenResponseDto>> RefreshToken(RefreshTokenRequestDto request)
+        {
+            var result = await authService.RefreshTokensAsync(request);
+            if (result is null || result.AccessToken is null || result.RefreshToken is null)
+            {
+                return Unauthorized("Invalid refresh token");
+            }
+            return Ok(result);
         }
     }
 }

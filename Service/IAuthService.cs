@@ -5,9 +5,10 @@ namespace WebApplication1.Service
 {
     public interface IAuthService
     {
-        Task<User?> RegisterAsync(UserDTO user);
+        Task<User?> RegisterAsync(UserDto user);
 
         // ? is used to return a nullable value
-        Task<string?> LoginAsync(UserDTO user);
+        Task<TokenResponseDto?> LoginAsync(UserDto user);
+        Task<TokenResponseDto?> RefreshTokensAsync(RefreshTokenRequestDto request);
     }
 }
