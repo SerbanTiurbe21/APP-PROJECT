@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WebApplication1.Data;
 using WebApplication1.Exceptions;
+using WebApplication1.Middleware;
 using WebApplication1.Service;
 
 namespace WebApplication1
@@ -52,6 +53,7 @@ namespace WebApplication1
             }
 
             app.UseMiddleware<ExceptionMiddleware>();
+            app.UseMiddleware<LoggingMiddleware>();
 
             app.UseHttpsRedirection();
 
