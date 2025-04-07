@@ -2,7 +2,7 @@
 {
     public class Product
     {
-        public Guid Id { get; set; }     // Primary Key
+        public Guid Id { get; set; }
         public required string Name { get; set; }
     }
 }

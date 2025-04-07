@@ -36,6 +36,11 @@ namespace WebApplication1
                     ValidateIssuerSigningKey = true,
                 };
             });
+            builder.Services.AddCors(options => 
+            {
+                options.AddPolicy("AllowSpecificOrigin",
+                    builder => builder.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod());
+            });
 
             var app = builder.Build();
 
