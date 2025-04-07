@@ -10,13 +10,12 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class AuthController(IAuthService authService) : ControllerBase
     {
-        // do dependency injection for the service layer
-        private readonly IAuthService _authService = authService;
+        private readonly IAuthService authService = authService;
 
         [HttpPost("register")]
         public async Task<ActionResult<User>> Register(UserDTO request)
         {
-            var user = await _authService.RegisterAsync(request);
+            var user = await authService.RegisterAsync(request);
             if (user is null)
             {
                 return BadRequest("User already exists");
@@ -27,7 +26,7 @@ namespace WebApplication1.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<string>> Login(UserDTO request)
         { 
-            var token = await _authService.LoginAsync(request);
+            var token = await authService.LoginAsync(request);
             if (token is null)
             {
                 return BadRequest("Wrong password");
