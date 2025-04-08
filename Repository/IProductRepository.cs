@@ -1,15 +1,11 @@
 ﻿using WebApplication1.Models;
 
-namespace WebApplication1.Service
+namespace WebApplication1.Repository
 {
-    public interface IProductService
+    public interface IProductRepository
     {
-        // we use async and await to make the code non-blocking
-        // we use Task to return a value in the future
-        // we use IEnumerable to return a collection of products
         Task<IEnumerable<Product>> GetAllProductsAsync();
 
-        // we use ? to return a nullable value
         Task<Product?> GetProductByIdAsync(Guid id);
 
         Task<Product> CreateProductAsync(Product product);
@@ -17,5 +13,6 @@ namespace WebApplication1.Service
         Task UpdateProductAsync(Product product);
 
         Task DeleteProductAsync(Guid id);
+        Task<bool> ProductExistsAsync(string name);
     }
 }

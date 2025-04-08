@@ -22,7 +22,7 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetProduct(int id)
+        public async Task<ActionResult<Product>> GetProduct(Guid id)
         {
             var product = await _productService.GetProductByIdAsync(id);
             return product is null ? NotFound() : Ok(product);
@@ -60,7 +60,7 @@ namespace WebApplication1.Controllers
 
         [HttpDelete("{id}")]
         // we used the IActionResult to return a status code -> only for DELETE and PUT requests
-        public async Task<IActionResult> DeleteProduct(int id)
+        public async Task<IActionResult> DeleteProduct(Guid id)
         {
             await _productService.DeleteProductAsync(id);
             return NoContent();

@@ -2,57 +2,48 @@
 using WebApplication1.Data;
 using WebApplication1.Exceptions;
 using WebApplication1.Models;
+using WebApplication1.Repository;
 
 namespace WebApplication1.Service
 {
-    // we can inject the db context in the constructor
-    public class ProductService(AppDbContext context) : IProductService
+    public class ProductService(IProductRepository productRepository) : IProductService
     {
 
-        // inject the db context 
-        private readonly AppDbContext _context = context;
+        private readonly IProductRepository _productRepository = productRepository;
 
         public async Task<Product> CreateProductAsync(Product product)
         {
-            bool productExists = await _context.Products.AnyAsync(p => p.Name.ToLower() == product.Name.ToLower());
+            bool productExists = await _productRepository.ProductExistsAsync(product.Name);
             if (productExists)
             {
                 throw new DuplicateProductException("Product already exists");
             }
-            // we add the product to the db context
-            _context.Products.Add(product);
-            // we save the changes to the database
-            await _context.SaveChangesAsync();
-            // we return the product
-            return product;
+            return await _productRepository.CreateProductAsync(product);
         }
-
-        public async Task DeleteProductAsync(int id)
+        public async Task DeleteProductAsync(Guid id)
         {
-            var product = await _context.Products.FindAsync(id) ?? throw new Exception("Product not found");
-            // we remove the product from the db context
-            _context.Products.Remove(product);
-            // we save the changes to the database
-            await _context.SaveChangesAsync();
+            var product = await _productRepository.GetProductByIdAsync(id) ?? throw new Exception("Product not found");
+            await _productRepository.DeleteProductAsync(id);
         }
 
         public async Task<IEnumerable<Product>> GetAllProductsAsync()
         {
-            return await _context.Products.ToListAsync();
+            return await _productRepository.GetAllProductsAsync();
         }
 
-        public async Task<Product?> GetProductByIdAsync(int id) => await _context.Products.FindAsync(id) ?? throw new Exception("Product not found");
-        
+        public async Task<Product?> GetProductByIdAsync(int id)
+        {
+            return await _productRepository.GetProductByIdAsync(id) ?? throw new Exception("Product not found");
+        }
+
         public async Task UpdateProductAsync(Product product)
         {
-            // we check if the product exists in the database
-            // This is a discard operator in C#. It indicates that the result of the expression is intentionally ignored.
-            // In this case, the result of FindAsync is not stored in a variable because it is only used to check for existence.
-            _ = await _context.Products.FindAsync(product.Id) ?? throw new Exception("Product not found");
-            // this line is used to inform the db context that the product has been modified
-            _context.Entry(product).State = EntityState.Modified;
-            // we save the changes to the database
-            await _context.SaveChangesAsync();
+            var existingProduct = await _productRepository.GetProductByIdAsync(product.Id);
+            if (existingProduct == null)
+            {
+                throw new Exception("Product not found");
+            }
+            await _productRepository.UpdateProductAsync(product);
         }
     }
 }

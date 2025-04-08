@@ -8,6 +8,7 @@ using System.Text.Json;
 using WebApplication1.Data;
 using WebApplication1.Exceptions;
 using WebApplication1.Middleware;
+using WebApplication1.Repository;
 using WebApplication1.Service;
 
 namespace WebApplication1
@@ -26,6 +27,7 @@ namespace WebApplication1
             builder.Services.AddSwaggerGen();
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped<IProductService, ProductService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => {
