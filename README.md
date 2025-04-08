@@ -64,6 +64,11 @@ This project follows the Controller-Service-Context pattern:
 
 Navigate to `http://localhost:<port>/swagger` to view the Swagger UI and interact with the API.
 
+## Testing
+
+For unit and integration testing, refer to the **[NET-Testing repository](https://github.com/SerbanTiurbe21/NET-Testing)**. This repository contains various test projects designed to validate the functionality of the Online Store application, ensuring that business logic, API endpoints, and data access layers perform as expected.
+
+
 ## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
