@@ -17,5 +17,7 @@ namespace WebApplication1.Service
         Task UpdateProductAsync(Product product);
 
         Task DeleteProductAsync(Guid id);
+
+        Task<IEnumerable<Product>> GetFilteredProductsAsync(string name, decimal? minPrice, decimal? maxPrice);
     }
 }

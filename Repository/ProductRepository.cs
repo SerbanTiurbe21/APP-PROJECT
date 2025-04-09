@@ -10,13 +10,15 @@ namespace WebApplication1.Repository
 
         public async Task<IEnumerable<Product>> GetAllProductsAsync()
         {
-            return await _context.Products.ToListAsync();
+            IQueryable<Product> query = _context.Products;
+            return await query.ToListAsync();
         }
 
         public async Task<Product?> GetProductByIdAsync(Guid id)
         {
             return await _context.Products.FindAsync(id);
         }
+
         public async Task<Product> CreateProductAsync(Product product)
         {
             await _context.Products.AddAsync(product);

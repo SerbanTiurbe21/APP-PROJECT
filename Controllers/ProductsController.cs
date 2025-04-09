@@ -65,5 +65,12 @@ namespace WebApplication1.Controllers
             await _productService.DeleteProductAsync(id);
             return NoContent();
         }
+
+        [HttpGet("filter")]
+        public async Task<ActionResult<IEnumerable<Product>>> GetFilteredProducts([FromQuery] string name = null!, [FromQuery] decimal? minPrice = null, [FromQuery] decimal? maxPrice = null)
+        {
+            var products = await _productService.GetFilteredProductsAsync(name, minPrice, maxPrice);
+            return Ok(products);
+        }
     }
 }

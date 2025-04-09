@@ -20,6 +20,7 @@ namespace WebApplication1.Service
             }
             return await _productRepository.CreateProductAsync(product);
         }
+
         public async Task DeleteProductAsync(Guid id)
         {
             var product = await _productRepository.GetProductByIdAsync(id) ?? throw new Exception("Product not found");
@@ -31,7 +32,20 @@ namespace WebApplication1.Service
             return await _productRepository.GetAllProductsAsync();
         }
 
-        public async Task<Product?> GetProductByIdAsync(int id)
+        public async Task<IEnumerable<Product>> GetFilteredProductsAsync(string name, decimal? minPrice, decimal? maxPrice)
+        {
+            var products = await _productRepository.GetAllProductsAsync();
+            var query = products.AsQueryable();
+
+            if (!string.IsNullOrEmpty(name))
+            { 
+                query = query.Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<Product?> GetProductByIdAsync(Guid id)
         {
             return await _productRepository.GetProductByIdAsync(id) ?? throw new Exception("Product not found");
         }
